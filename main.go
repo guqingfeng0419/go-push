@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/go-redis/redis"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/go-redis/redis"
 )
 
 var wg sync.WaitGroup
@@ -29,8 +30,8 @@ func main() {
 	var err error
 
 	client = redis.NewClient(&redis.Options{
-		Addr:        "r-bp1fzqk7he7rt7ot1m.redis.rds.aliyuncs.com:6379",
-		Password:    "Sinyee4Redis", // no password set
+		Addr:        "r-bp14231d0c93e104.redis.rds.aliyuncs.com:6379",
+		Password:    "Sinyee4redis", // no password set
 		DB:          0,
 		DialTimeout: 0,
 		MaxRetries:  5,
@@ -44,7 +45,7 @@ func main() {
 	fmt.Println(nowTime)
 
 	for {
-		num, err := client.Exists(listKey).Result()
+		num, err := client.LLen(listKey).Result()
 
 		if err != nil {
 			fmt.Println(err)
@@ -98,7 +99,7 @@ func main() {
 					return
 				}
 
-				if redisDataMap["type"] == 3 {
+				if redisDataMap["type"] == "3" {
 					accessToken = getAccessToken(gameAppid, gameSecret, client)
 				}
 

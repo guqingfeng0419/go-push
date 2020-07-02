@@ -3,58 +3,51 @@ package main
 import (
 	"fmt"
 
-	"github.com/go-redis/redis"
-
-	"time"
-
-	"os"
-
+	"encoding/json"
 	"sync"
 
-	"math/rand"
+	"github.com/go-redis/redis"
 )
 
 var wg sync.WaitGroup
+var listKey = "chinese:home:user:visit:fake"
 
 func main() {
 
 	client := redis.NewClient(&redis.Options{
-		Addr:     "10.1.14.187:6938",
-		Password: "sinyee4redis", // no password set
-		DB:       0,              // use default DB
+		Addr:        "r-bp1fzqk7he7rt7ot1m.redis.rds.aliyuncs.com:6379",
+		Password:    "Sinyee4Redis", // no password set
+		DB:          3,              // use default DB
+		DialTimeout: 0,
+		MaxRetries:  5,
 	})
 
-	pong, err := client.Ping().Result()
-	fmt.Println(pong, err)
+	var redisData map[string]string
+	redisData = make(map[string]string)
+	redisData["visit_id"] = "5484"
+	redisData["rand"] = "5"
 
-	now := time.Now()
-	nowTime := now.Format("2006-01-02 15:04:05")
-	fmt.Println(nowTime)
-
-	for i := 0; i < 100; i++ {
-
-		wg.Add(100)
-
-		go func() {
-
-			for j := 0; j < 100; j++ {
-
-				num := rand.Intn(99999999)
-				client.LPush("wx:world:list:push", num).Result()
-
-			}
-			wg.Done()
-		}()
+	data, err := json.Marshal(redisData)
+	if err != nil {
+		fmt.Println(err)
 	}
-
-	wg.Wait()
-
-	end := time.Now()
-	endTime := end.Format("2006-01-02 15:04:05")
-	fmt.Println(nowTime)
-	fmt.Println(endTime)
-
-	os.Exit(1)
-
-	return
+	go func() {
+		for i := 0; i < 10000; i++ {
+			res, err := client.RPush(listKey, string(data)).Result()
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println(res)
+		}
+	}()
+	go func() {
+		for i := 0; i < 10000; i++ {
+			res, err := client.RPush(listKey, string(data)).Result()
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println(res)
+		}
+	}()
+	select {}
 }
